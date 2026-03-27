@@ -10,10 +10,12 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="${pageContext.request.contextPath}/index">Home</a>
 
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li>
+                    <a class="navbar-brand" href="${pageContext.request.contextPath}/index">Home</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="${pageContext.request.contextPath}/browseRecipes">Discover Recipes</a>
                 </li>
