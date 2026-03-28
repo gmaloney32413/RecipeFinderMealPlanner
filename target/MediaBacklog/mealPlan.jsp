@@ -36,25 +36,14 @@
             <tbody>
             <c:forEach var="day" items="${daysOfWeek}">
                 <tr>
-                    <td class="day-cell">${day}</td>
+                    <td>${day}</td>
                     <c:forEach var="mealType" items="${mealTypes}">
-                        <td class="meal-cell">
-                            <c:set var="meal" value="${mealPlan[day][mealType]}" />
-                            <c:if test="${meal != null}">
-                                <div class="meal-recipe">${meal.recipeTitle}</div>
-                            </c:if>
-                            <!-- Dropdown to add saved recipe -->
-                            <form action="addMealPlan" method="post" class="meal-add-form">
-                                <input type="hidden" name="dayOfWeek" value="${day}">
-                                <input type="hidden" name="mealType" value="${mealType}">
-                                <select name="savedRecipeId">
-                                    <c:forEach var="recipe" items="${savedRecipes}">
-                                        <option value="${recipe.savedRecipeId}">${recipe.recipeTitle}</option>
-                                    </c:forEach>
-                                </select>
-                                <button type="submit" class="btn btn-add">Add</button>
-                            </form>
-                        </td>
+                    <td>
+                        <c:set var="meal" value="${mealPlanGrid[day][mealType]}" />
+                        <c:if test="${meal != null}">
+                            ${meal.recipeTitle}
+                        </c:if>
+                    </td>
                     </c:forEach>
                 </tr>
             </c:forEach>
