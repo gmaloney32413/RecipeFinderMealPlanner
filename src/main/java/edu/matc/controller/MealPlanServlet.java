@@ -1,5 +1,6 @@
 package edu.matc.controller;
 
+import edu.matc.com.spoonacular.Recipes;
 import edu.matc.entity.MealPlan;
 import edu.matc.entity.Recipe;
 import edu.matc.entity.User;
@@ -10,6 +11,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,9 +20,11 @@ import java.util.stream.Collectors;
 public class MealPlanServlet extends HttpServlet {
 
     private GenericDao<MealPlan> mealPlanDao;
+    private GenericDao<Recipe> recipeDao;
 
     @Override
     public void init() {
+        recipeDao = new GenericDao<>(Recipe.class);
         mealPlanDao = new GenericDao<>(MealPlan.class);
     }
 
@@ -32,26 +36,28 @@ public class MealPlanServlet extends HttpServlet {
         User user = new User();
         user.setUserId(userId);
 
+        //
+        List<Recipe> userRecipes = recipeDao.getByPropertyEqual("user", user);
+
         // Get all meal plans
         List<MealPlan> mealPlans = mealPlanDao.getByPropertyEqual("user", user);
 
-        Map<String, Map<String, Recipe>> planGrid = new HashMap<>();
-        String[] daysOfWeek = {"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
+        Map<Integer, Recipe> recipeMap = userRecipes.stream()
+                .collect(Collectors.toMap(Recipe::getSpoonacularRecipeId, r -> r));
 
+
+        String[] daysOfWeek = {"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
+        String[] mealTypes = {"breakfast","lunch","dinner"};
+
+        Map<String, Map<String, Recipe>> planGrid = new LinkedHashMap<>();
         for (String day : daysOfWeek) {
             planGrid.put(day, new HashMap<>());
         }
 
-        GenericDao<Recipe> recipeDao = new GenericDao<>(Recipe.class);
-
 // Fill the grid
         for (MealPlan plan : mealPlans) {
             // Get the recipe for this meal plan
-            Recipe recipe = recipeDao.getByPropertyEqual("spoonacularRecipeId", plan.getSpoonacularRecipeId())
-                    .stream()
-                    .filter(r -> r.getUser().getUserId() == plan.getUser().getUserId())
-                    .findFirst()
-                    .orElse(null);
+            Recipe recipe = recipeMap.get(plan.getSpoonacularRecipeId());
             if (recipe != null) {
                 planGrid.get(plan.getDayOfWeek()).put(plan.getMealType(), recipe);
             }
@@ -59,7 +65,7 @@ public class MealPlanServlet extends HttpServlet {
 
         request.setAttribute("mealPlanGrid", planGrid);
         request.setAttribute("daysOfWeek", daysOfWeek);
-        request.setAttribute("mealTypes", new String[]{"breakfast","lunch","dinner"});
+        request.setAttribute("mealTypes", mealTypes);
         // Send to JSP
         request.setAttribute("mealPlans", mealPlans);
         request.getRequestDispatcher("/mealPlan.jsp").forward(request, response);
