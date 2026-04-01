@@ -75,4 +75,34 @@ class MealPlanDaoTest {
 
         assertNull(deletedMealPlan);
     }
+
+
+    @Test
+    void getByPropertyEqualSuccess() {
+        List<MealPlan> mealPlans = mealPlanDao.getByPropertyEqual("mealType", "Lunch");
+        assertNotNull(mealPlans);
+    }
+
+    @Test
+    void getByIdNotFound() {
+        MealPlan mealPlan = mealPlanDao.getById(-1);
+        assertNull(mealPlan, "getById for non-existent ID should return null");
+    }
+
+    @Test
+    void insertWithNullOptionalFields() {
+        User user = userDao.getById(1);
+        MealPlan mealPlan = new MealPlan();
+        mealPlan.setUser(user);
+        mealPlan.setSpoonacularRecipeId(99999);
+        // leave dayOfWeek and mealType null
+
+        Object id = mealPlanDao.insert(mealPlan);
+        assertNotNull(id);
+
+        MealPlan inserted = mealPlanDao.getById((int) id);
+        assertNotNull(inserted);
+        assertNull(inserted.getDayOfWeek());
+        assertNull(inserted.getMealType());
+    }
 }

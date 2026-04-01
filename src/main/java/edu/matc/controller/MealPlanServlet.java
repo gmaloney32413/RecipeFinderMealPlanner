@@ -33,18 +33,14 @@ public class MealPlanServlet extends HttpServlet {
             throws ServletException, IOException {
 
         int userId = 1;
-        User user = new User();
-        user.setUserId(userId);
+        GenericDao<User> userDao = new GenericDao<>(User.class);
+        User user = userDao.getById(userId);
 
         //
         List<Recipe> userRecipes = recipeDao.getByPropertyEqual("user", user);
 
         // Get all meal plans
         List<MealPlan> mealPlans = mealPlanDao.getByPropertyEqual("user", user);
-
-        Map<Integer, Recipe> recipeMap = userRecipes.stream()
-                .collect(Collectors.toMap(Recipe::getSpoonacularRecipeId, r -> r));
-
 
         String[] daysOfWeek = {"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
         String[] mealTypes = {"breakfast","lunch","dinner"};
@@ -56,10 +52,23 @@ public class MealPlanServlet extends HttpServlet {
 
 // Fill the grid
         for (MealPlan plan : mealPlans) {
-            // Get the recipe for this meal plan
-            Recipe recipe = recipeMap.get(plan.getSpoonacularRecipeId());
-            if (recipe != null) {
-                planGrid.get(plan.getDayOfWeek()).put(plan.getMealType(), recipe);
+            Recipe recipe = userRecipes.stream()
+                    .filter(r -> r.getSpoonacularRecipeId() == plan.getSpoonacularRecipeId())
+                    .findFirst()
+                    .orElse(null);
+
+            if (recipe != null && plan.getDayOfWeek() != null && plan.getMealType() != null) {
+                // Normalize day and mealType
+                String day = plan.getDayOfWeek().trim();
+                if (!day.isEmpty()) {
+                    day = Character.toUpperCase(day.charAt(0)) + day.substring(1).toLowerCase();
+                    String mealType = plan.getMealType().trim().toLowerCase();
+
+                    Map<String, Recipe> mealMap = planGrid.get(day);
+                    if (mealMap != null) {
+                        mealMap.put(mealType, recipe);
+                    }
+                }
             }
         }
 

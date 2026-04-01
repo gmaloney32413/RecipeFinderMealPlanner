@@ -92,4 +92,32 @@ class RecipeDaoTest {
 
         assertNotNull(recipes);
     }
+
+    @Test
+    void getByIdNotFound() {
+        Recipe recipe = recipeDao.getById(-1);
+        assertNull(recipe, "getById for non-existent ID should return null");
+    }
+
+    @Test
+    void getByPropertyEqualEmpty() {
+        List<Recipe> recipes = recipeDao.getByPropertyEqual("recipeTitle", "nonexistent title");
+        assertNotNull(recipes, "List should not be null");
+        assertTrue(recipes.isEmpty(), "List should be empty for non-matching property");
+    }
+
+    @Test
+    void insertWithNullOptionalFields() {
+        User user = userDao.getById(1);
+        Recipe recipe = new Recipe();
+        recipe.setUser(user);
+        recipe.setSpoonacularRecipeId(12345);
+        recipe.setRecipeTitle("No Image or Notes");
+
+        int id = (int) recipeDao.insert(recipe);
+        Recipe inserted = recipeDao.getById(id);
+        assertNotNull(inserted);
+        assertNull(inserted.getRecipeImage());
+        assertNull(inserted.getNotes());
+    }
 }

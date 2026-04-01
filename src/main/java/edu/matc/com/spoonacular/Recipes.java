@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Recipes{
 
-	@JsonProperty("recipes")
+	@JsonProperty("results")
 	private List<RecipesItem> recipes;
 
 	public void setRecipes(List<RecipesItem> recipes){

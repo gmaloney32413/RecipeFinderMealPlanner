@@ -28,6 +28,7 @@ public class TestServiceClient {
      *
      * @throws Exception the exception
      */
+
     /*
     @Test
     public void testSpoonacularJSON() throws Exception {
@@ -71,7 +72,9 @@ public class TestServiceClient {
         //assertEquals("???", response);
     }
 
+
      */
+
 
 
 

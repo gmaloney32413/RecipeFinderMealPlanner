@@ -32,6 +32,7 @@ public class SpoonacularDao {
     private final String baseUrl = properties.getProperty("spoonacular.base.url");
 
     private final ObjectMapper mapper;
+    private final Client client = ClientBuilder.newClient();
 
     public SpoonacularDao() {
         mapper = new ObjectMapper();
@@ -40,18 +41,21 @@ public class SpoonacularDao {
 
     // Generic fetch for any endpoint returning a single recipe or list
     private <T> T fetch(String path, Class<T> clazz) {
-        Client client = ClientBuilder.newClient();
         try {
-            WebTarget target = client.target(baseUrl + path)
+            WebTarget target = client.target(baseUrl)
+                    .path(path)
                     .queryParam("apiKey", apiKey);
+
             String response = target.request(MediaType.APPLICATION_JSON).get(String.class);
+
+            logger.info("API Response: " + response);
             return mapper.readValue(response, clazz);
         } catch (JsonProcessingException e) {
             logger.error("Error processing response: " + e.getMessage());
-            return null;
+            throw new RuntimeException(e);
         } catch (Exception e) {
             logger.error("Error fetching data: " + e.getMessage());
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -63,9 +67,15 @@ public class SpoonacularDao {
      */
     public List<RecipesItem> searchRecipes(String query) {
         try {
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
-            String path = baseUrl + "/complexSearch?query=" + encodedQuery + "&number=15" + "&addRecipeInformation=true";
-            Recipes recipes = fetch(path, Recipes.class);
+            WebTarget target = client.target(baseUrl)
+                    .path("recipes/complexSearch")
+                    .queryParam("apiKey", apiKey)
+                    .queryParam("query", query)
+                    .queryParam("number", 15)
+                    .queryParam("addRecipeInformation", true);
+
+            String response = target.request(MediaType.APPLICATION_JSON).get(String.class);
+            Recipes recipes = mapper.readValue(response, Recipes.class);
             return recipes != null ? recipes.getRecipes() : Collections.emptyList();
         } catch (Exception e) {
             logger.error("Error searching recipes: " + e.getMessage());
@@ -80,7 +90,7 @@ public class SpoonacularDao {
      * @return RecipesItem
      */
     public RecipesItem getRecipeDetails(int recipeId) {
-        return fetch("/recipes/" + recipeId + "/information", RecipesItem.class);
+        return fetch("recipes/" + recipeId + "/information", RecipesItem.class);
     }
 
     /**
